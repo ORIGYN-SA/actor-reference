@@ -1,0 +1,40 @@
+# General configuration
+default:
+  image: node:lts
+  tags:
+    - docker
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - api_failure
+      - runner_unsupported
+      - unknown_failure
+
+cache:
+  - key: 'deps-$CI_COMMIT_BRANCH'
+    paths:
+      - .npm/
+      - node_modules/
+  - key: 'build-$CI_COMMIT_REF_SLUG'
+    paths:
+      - .next/cache/
+
+# Define the stages for the pipeline
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+
+test:
+  stage: test
+  script:
+    - npm test
